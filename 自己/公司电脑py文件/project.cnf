@@ -1,0 +1,21 @@
+[trend]
+server_host = 183.61.172.84,183.60.225.3
+server_project_path_org = /data/lottery/trend/webapps
+server_project_path = /data/lottery/trend/webapps/ROOT
+server_project_backpath = /tmp/backup/trend
+server_comm = /data/lottery/trend/bin/shutdown.sh,/data/lottery/trend/bin/startup.sh
+port = 8081
+
+[timelyScore-webServer]
+server_host = 183.61.172.67-68,203.14.188.243
+server_project_path_org = /data/sports/timelyScore-webServer/webapps/
+server_project_path = /data/sports/timelyScore-webServer/webapps/ROOT
+server_project_backpath = /tmp/backup/timelyScore-webServer
+server_comm = sh /data/sports/timelyScore-webServer/bin/shutdown.sh,sh /data/sports/timelyScore-webServer/bin/startup.sh
+
+[app]
+server_host = 183.61.172.66,183.60.225.2
+
+[app2]
+server_host = 183.61.172.66,183.60.225.2
+

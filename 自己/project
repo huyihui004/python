@@ -1,0 +1,44 @@
+#!/usr/bin/python
+#coding=utf-8
+import paramiko
+import sys
+import thread
+
+class Update_Project():
+    def __init__(self,Port = 2222,User = 'hhlyadmin',Password = 'FirstHhly1##22)%^com'):
+        self.Port = Port
+        self.User = User
+        self.Password = Password
+
+    #上传文件
+    def Put_File(self,Ip,Local_File,Server_File):
+        t = paramiko.Transport((Ip,self.Port))
+        t.connect(username = self.User,password = self.Password)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        sftp.put(Local_File,Server_File)
+        t.close()
+
+    #远程执行命令
+    def Start_Comm(self,Ip,Comm):
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(Ip,self.Port,self.User,self.Password)
+        stdin, stdout, stderr = ssh.exec_command('%s' %(Comm))
+        Values = stdout.read()
+        ssh.close()
+        print Values
+
+if __name__ == '__main__':
+    Ip_List = ["183.61.172.79","203.14.188.243"]
+    if sys.argv[2] in Ip_List:
+    	main = Update_Project(Password='FirstHhly!3#2@*com')
+    	if sys.argv[1] == "start":
+            main.Start_Comm('%s' %(sys.argv[2]),'%s' %(sys.argv[3]))
+    	elif sys.argv[1] == "upload":
+            main.Put_File('%s' %(sys.argv[2]),'%s' %(sys.argv[3]),'%s' %(sys.argv[4]))
+    else:
+    	main = Update_Project()
+    	if sys.argv[1] == "start":
+            main.Start_Comm('%s' %(sys.argv[2]),'%s' %(sys.argv[3]))
+    	elif sys.argv[1] == "upload":
+            main.Put_File('%s' %(sys.argv[2]),'%s' %(sys.argv[3]),'%s' %(sys.argv[4]))

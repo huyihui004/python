@@ -1,0 +1,197 @@
+#!/usr/bin/python
+#coding=utf-8
+# @Date    : 2016-04-22 12:15
+# @update  : 
+# @title   : Auto release code  
+# @author  : long.xin.peng
+
+import ConfigParser
+import commands
+import sys
+import time
+import zipfile
+import re
+import os
+from hashlib import md5
+
+class Server():
+    def __init__(self):
+        pass
+    
+    #获取配置文件信息
+    def ConFig(self,Key,Project=None,Key_Values=None):
+        Cf = ConfigParser.ConfigParser()
+        Cf.read('/etc/project.cnf')
+        if Key == "sections":
+            Values = Cf.sections()
+            return Values
+        elif Key == "options":
+            Values = Cf.options('%s' %(Project)) 
+            return Values
+        elif Key == "items":
+            Values = Cf.items('%s' %(Project))
+            return Values
+        elif Key == "get":
+            Values = Cf.get('%s' %(Project),"%s" %(Key_Values))
+            return Values
+
+    #获取压缩包里面文件列表
+    def Read_Zip(self,File_Path):
+        File = zipfile.ZipFile('%s' %(File_Path),'r')
+        Values = File.namelist()
+        return Values
+    
+    #写入文件
+    def Write_File(self,File_Path,Values):
+        File = open('%s' %(File_Path),'a+')
+        File.write('%s' %(Values))
+        File.close()
+        return True
+    
+    #md5认证
+    def Md5_File(self,File):
+        m = md5()
+        Org_File = open('%s' %(File),'rb')
+        m.update(Org_File.read())
+        Org_File.close()
+        return m.hexdigest()
+
+    #更新操作
+    def Update(self,Ip,Backup_Dir,Project_Org,Project_Path):
+        print "开始更新:"
+        #获取当前系统时间
+        #System_Time = time.strftime("%Y%m%d%H%M%S")
+        #创建备份文件夹
+        #Return = commands.getstatusoutput('xgo -i %s -c "mkdir -p %s/%s"' %(Ip,Backup_Dir,System_Time))[-1]
+        #Return_Values = Return.split('\n')[-2].replace("successed nums : 0, failed nums : ","")
+        #if Return_Values == str(1):
+        #    print "更新异常:"
+        #    print "\t创建备份文件夹失败..."
+        #    print Return
+        #else:
+        #    print "\t创建备份文件夹成功!"
+        #解析更新zip包里面的文件路径 
+        #Update_File_List = self.Read_Zip(sys.argv[1]) 
+        #更新文件进行md5认证
+        Md5_Values = self.Md5_File('%s' %(sys.argv[1]))
+        #上传更新代码到服务器
+        commands.getstatusoutput('xgo -i %s -c "rm -rf /home/hhlyadmin/server-new/*"' %(Ip))
+        Return = commands.getstatusoutput('xgo -i %s -s %s -d /home/hhlyadmin/server-new' %(Ip,sys.argv[1]))[-1]
+        Return_Values = Return.replace("successed nums : 0, failed nums : ","")
+        if Return_Values == str(1):
+            print "更新异常:"
+            print "\t上传更新代码包失败..."
+            print Return
+        else:
+            print "\t上传更新代码包成功!"
+            print "\t进行md5效验..."
+            Return = commands.getstatusoutput('xgo -i %s -c "md5sum /home/hhlyadmin/server-new/%s"' %(Ip,sys.argv[1]))[-1].split('\n')[8:-3]
+            Re_Md5 = '^(.*)  /home/hhlyadmin/server-new/%s' %(sys.argv[1])
+            for md5 in range(len(Return)):
+                Values = re.findall(Re_Md5,Return[md5])
+                if Values != []:
+                    if Md5_Values == Values[-1]:
+                        print "\tmd5效验成功!"
+                        sys.exit(1)
+                    else:
+                        print "更新异常:"
+			print "\tmd5效验失败!"
+                        sys.exit(1)
+        #备份更新文件
+        #commands.getstatusoutput(':> file_list')
+        #for file in range(len(Update_File_List)):
+        #     File_Comm = 'cd %s && /bin/cp -r --parents %s %s/%s/\n' %(Project_Org,Update_File_List[file],Backup_Dir,System_Time)
+        #     self.Write_File("file_list",File_Comm)
+        #Return = commands.getstatusoutput('xgo -i %s -s %s -d /home/hhlyadmin/server-new' %(Ip,"file_list"))[-1]
+        #Return_Values = Return.replace("successed nums : 0, failed nums : ","")
+        #if Return_Values == str(1):
+        #    print "更新异常:"
+        #    print "\t上传文件列表失败..."
+        #    print Return
+        #else:
+        #    print "\t上传文件列表成功!"
+        #执行备份更新文件
+        #commands.getstatusoutput('xgo -i %s -c "/usr/local/bin/cpfile.py cpfile"' %(Ip))
+        #备份最新更新文件
+        #commands.getstatusoutput('xgo -i %s -c "unzip /home/hhlyadmin/server-new/%s -d /home/hhlyadmin/server-new/"' %(Ip,sys.argv[1])) 
+        #commands.getstatusoutput('xgo -i %s -c "cp -rf /home/hhlyadmin/server-new/%s %s/%s/%s_new"' %(Ip,sys.argv[1].split('.')[0],Backup_Dir,System_Time,sys.argv[1].split('.')[0])) 
+        #更新代码
+        commands.getstatusoutput('xgo -i %s -c "unzip -o /home/hhlyadmin/server-new/%s -d %s"' %(Ip,sys.argv[1],Project_Org))
+        print "\t更新代码成功!"
+
+    #回滚代码操作
+    def Rollback(self,Ip,Backup_Dir,Project_Path):
+        print "回滚代码:"
+        #获取服务器最近一次更新的时间
+        Update_Time = commands.getstatusoutput('xgo -i %s -c "ls %s" | sort -n | tail -1' %(Ip,Backup_Dir))[-1]
+        #获取新增文件
+        New_File = commands.getstatusoutput('xgo -i %s -c "cd %s/%s/%s && rsync -rc --progress --delete . ../%s_new"' %(Ip,Backup_Dir,Update_Time,sys.argv[1].split('.')[0],sys.argv[1].split('.')[0]))[-1].split("\n") 
+        Re_NewFile = '^deleting (.*)$'        
+        NewFile = []
+        commands.getstatusoutput(':> remove_file')
+        for newfile in range(len(New_File)):
+            Values = re.findall(Re_NewFile,New_File[newfile])
+            if Values != []:
+                Remove_Comm = 'rm -rf %s/%s\n' %(Project_Path,Values[0])
+                self.Write_File("remove_file",Remove_Comm) 
+        #删除新增文件
+        commands.getstatusoutput('xgo -i %s -s %s -d /home/hhlyadmin/server-new' %(Ip,"remove_file"))[-1]
+        commands.getstatusoutput('xgo -i %s -c "/usr/local/bin/cpfile.py remove"' %(Ip))
+        print "\t删除新增文件成功!"
+        Return = commands.getstatusoutput('xgo -i %s -c "/bin/cp -rf %s/%s/%s/* %s"' %(Ip,Backup_Dir,Update_Time,sys.argv[1].split('.')[0],Project_Path))
+        Return_Values = Return[-1].split('\n')[-2].replace("successed nums : 0, failed nums : ","")
+        if Return_Values == str(1):
+            print "回滚异常:"
+            print "\t回滚代码失败..."
+            print Return
+        else:
+            print "\t覆盖更新文件..."
+            print "\t覆盖更新文件成功!"
+            print "\t回滚代码成功!"
+    #执行命令 
+    def Command(self,Ip,Server_Comm):
+        print "执行命令:"
+        #获取命令
+        Comm = Server_Comm.split(',')
+        #执行命令
+        for comm in range(len(Comm)):
+            Return = commands.getstatusoutput('xgo -i %s -c "%s"' %(Ip,Comm[comm])) 
+            time.sleep(3)
+            print Return
+if __name__ == '__main__':
+    Main = Server()
+    if len(sys.argv) >= 4:
+        #获取要更新的项目名
+        Project_Name = sys.argv[2]
+        #遍历配置文件中所有的项目名与用户输入的项目匹配
+        Cf_Project = Main.ConFig("sections") 
+        for name in range(len(Cf_Project)):
+            if Project_Name == Cf_Project[name]:
+                #获取服务器的IP地址
+                Server_Ip = Main.ConFig("get",Project='%s' %(Project_Name),Key_Values="Server_Host")
+                #获取服务器的项目路径
+                Server_ProjectPath = Main.ConFig("get",Project='%s' %(Project_Name),Key_Values="Server_project_Path")
+                #获取服务器的项目根路径
+                Server_ProjectPath_Org = Main.ConFig("get",Project='%s' %(Project_Name),Key_Values="Server_project_Path_Org")
+                #获取服务器的备份项目路径
+                Server_ProjectBackup = Main.ConFig("get",Project='%s' %(Project_Name),Key_Values="Server_Project_BackPath")
+                #获取服务器要执行的命令
+                Server_ProjectComm = Main.ConFig("get",Project='%s' %(Project_Name),Key_Values="Server_Comm")
+                if sys.argv[3] == "update":
+                    Main.Update(Server_Ip,Server_ProjectBackup,Server_ProjectPath_Org,Server_ProjectPath) 
+                #elif sys.argv[3] == "rollback":
+                #    Main.Rollback(Server_Ip,Server_ProjectBackup,Server_ProjectPath)
+                else:
+                    print "Usage:"
+                    print "\tproject 代码包绝对路径 项目名 update [start]"
+                    #print "\tproject 代码包绝对路径 项目名 [update|rollback] [start]"
+                    print "\t详细参数:"
+                    print "\t\tupdate[更新代码]"
+                    #print "\t\trollback[回滚到上一次的更新]"
+                    print "\t\tstart[可选参数,执行命令]"
+                    sys.exit(1)
+                try:
+                    if sys.argv[4] == "start":
+                        Main.Command(Server_Ip,Server_ProjectComm)
+                except IndexError:
+                    sys.exit(0)

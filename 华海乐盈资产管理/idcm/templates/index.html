@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<title>首页</title>
+ 
+</head>
+
+<body>
+<p>华海乐盈资产管理</p>
+{% if room_name %}<h1>{{ room_name }}机房</h1>{% endif %}<h1>共有{{ total_record }}条记录</h1>
+<form action="{{ url_for('index') }}" method=post>
+机房:
+<select name="idc_room_name">
+  <option value="None" selected="selected">please select</option>
+  <option value="HK">HK</option>
+  <option value="DG">DG</option>
+  <option value="TH">TH</option>
+  <option value="SG">SG</option>
+  <option value="VN">VN</option>
+</select>
+or IP:<input type=text size=20 name=ip />
+or SN:<input type=text size=20 name=sn />
+<input type=submit value=搜索 />
+</form>
+<table height="157" class="table">
+  <tr>
+    <th height="107" scope="col">机房</th>
+    <th scope="col">OS</th>
+    <th scope="col">Version</th>
+    <th width="60" scope="col">公网IP</th>
+    <th width="60" scope="col">内网IP</th>
+    <th scope="col">SN</th>
+    <th scope="col">厂商</th>
+    <th scope="col">型号</th>
+    <th scope="col">CPU型号</th>
+    <th scope="col">内存数量</th>
+    <th scope="col">内存容量</th>
+    <th scope="col">RAID</th>
+    <th scope="col">硬盘数量</th>
+    <th scope="col">单个硬盘容量</th>
+  </tr>
+    {% for entry in results %}
+  <tr>
+    <td>{{ entry[0] }}</td>
+    <td>{{ entry[1] }}</td>
+    <td>{{ entry[2] }}</td>
+    <td width="60">{{ entry[3] }}</td>
+    <td>{{ entry[4] }}</td>
+    <td>{{ entry[5] }}</td>
+    <td>{{ entry[6] }}</td>
+    <td>{{ entry[7] }}</td>
+    <td>{{ entry[8] }}</td>
+    <td>{{ entry[9] }}</td>
+    <td>{{ entry[10] }}</td>
+    <td>{{ entry[11] }}</td>
+    <td>{{ entry[12] }}</td>
+    <td>{{ entry[13] }}</td>
+  </tr>
+      {% endfor %}
+</table>
+<p>&nbsp;</p>
+</body>
+</html>
