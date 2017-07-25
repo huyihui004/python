@@ -5,7 +5,7 @@ import sys
 import thread
 
 class Update_Project():
-    def __init__(self,Port = 2222,User = 'hhlyadmin',Password = 'FirstHhly1##22)%^com'):
+    def __init__(self,Port = 2222,User = 'admin',Password = '123456'):
         self.Port = Port
         self.User = User
         self.Password = Password
@@ -31,7 +31,7 @@ class Update_Project():
 if __name__ == '__main__':
     Ip_List = ["183.61.172.79","203.14.188.243"]
     if sys.argv[2] in Ip_List:
-    	main = Update_Project(Password='FirstHhly!3#2@*com')
+    	main = Update_Project(Password='123456')
     	if sys.argv[1] == "start":
             main.Start_Comm('%s' %(sys.argv[2]),'%s' %(sys.argv[3]))
     	elif sys.argv[1] == "upload":
