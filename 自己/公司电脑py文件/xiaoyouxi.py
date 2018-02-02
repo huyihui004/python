@@ -20,7 +20,7 @@ for line in Data:
     result[s[0]] = s[1:]  #把第一项作为key，把剩下的作为value
 if result.get(Name) is None:  #如果当前玩家数据没有，则初始化数据
     result[Name]=(0,0,0)
-T1,T2,T3=int(result.get(Name)[0]),int(result.get(Name)[1]),int(result.get(Name)[2])  #获取之前玩家的数据
+T1,T2,T3=int(result.get(Name)[0]),int(result.get(Name)[1]),int(result.get(Name)[2])  #获取玩家之前的数据
 p = random.randint(1,20)  #取一个随机数
 num = 0
 while True:
